@@ -11,6 +11,34 @@ const obtenerPreguntas = async (req, res = response) => {
     })
 }
 
+const obtenerPreguntasPaginadas = async(req, res = response) => {
+
+    let {page, size} = req.query
+
+    if (!page) {
+        page = 1
+    }
+
+    if (!size) {
+        size = 10
+    }
+
+    const limit = parseInt(size)
+    const skip = (page - 1) * size
+
+    Preguntas.find().sort('-createdAt').limit(limit).skip(skip).exec((err, preguntas) => {
+        Preguntas.count((err, count) => {
+            if (err) return false
+            res.status(200).json({
+                ok: true,
+                preguntas,
+                page,
+                total: Math.ceil(count/limit),
+            })
+        })
+    })    
+}
+
 const CrearPregunta = async (req, res = response) => {
 
     try {
@@ -99,6 +127,7 @@ const EliminarPregunta = async (req, res = response) => {
 
 module.exports = {
     obtenerPreguntas,
+    obtenerPreguntasPaginadas,
     CrearPregunta,
     ActualizarPregunta,
     EliminarPregunta,
