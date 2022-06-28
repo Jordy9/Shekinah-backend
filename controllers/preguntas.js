@@ -13,7 +13,11 @@ const obtenerPreguntas = async (req, res = response) => {
 
 const obtenerPreguntasPaginadas = async(req, res = response) => {
 
-    let {page, size} = req.query
+    let {page, size, searchParams} = req.query
+
+    if (!searchParams) {
+        searchParams = ''
+    }
 
     if (!page) {
         page = 1
@@ -26,17 +30,35 @@ const obtenerPreguntasPaginadas = async(req, res = response) => {
     const limit = parseInt(size)
     const skip = (page - 1) * size
 
-    Preguntas.find().sort('-createdAt').limit(limit).skip(skip).exec((err, preguntas) => {
-        Preguntas.count((err, count) => {
-            if (err) return false
-            res.status(200).json({
-                ok: true,
-                preguntas,
-                page,
-                total: Math.ceil(count/limit),
+    if (searchParams === '') {
+
+        Preguntas.find().sort('-createdAt').limit(limit).skip(skip).exec((err, preguntas) => {
+            Preguntas.count((err, count) => {
+                if (err) return false
+                res.status(200).json({
+                    ok: true,
+                    preguntas,
+                    page,
+                    total: Math.ceil(count/limit),
+                })
             })
         })
-    })    
+
+    } else {
+
+        Preguntas.find({idPregunta: searchParams}).sort('-createdAt').limit(limit).skip(skip).exec((err, preguntas) => {
+            Preguntas.count((err, count) => {
+                if (err) return false
+                res.status(200).json({
+                    ok: true,
+                    preguntas,
+                    page,
+                    total: Math.ceil(count/limit),
+                })
+            })
+        })    
+    }
+
 }
 
 const CrearPregunta = async (req, res = response) => {
