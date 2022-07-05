@@ -8,7 +8,7 @@ router.get('/', obtenerPreguntas)
 
 router.get('/pag', obtenerPreguntasPaginadas)
 
-router.use(validatJWT)
+// router.use(validatJWT)
 
 router.post('/new', CrearPregunta)
 

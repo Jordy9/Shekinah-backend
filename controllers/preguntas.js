@@ -40,6 +40,7 @@ const obtenerPreguntasPaginadas = async(req, res = response) => {
                     preguntas,
                     page,
                     total: Math.ceil(count/limit),
+                    count
                 })
             })
         })
@@ -54,6 +55,7 @@ const obtenerPreguntasPaginadas = async(req, res = response) => {
                     preguntas,
                     page,
                     total: Math.ceil(count/limit),
+                    count
                 })
             })
         })    

@@ -8,7 +8,8 @@ const PreguntasSchema = Schema({
     },
     idPregunta: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     respuesta: {
         type: Object,
@@ -27,10 +28,6 @@ const PreguntasSchema = Schema({
         required: true
     },
     libro: {
-        type: String,
-        required: true
-    },
-    idLibro: {
         type: String,
         required: true
     },
