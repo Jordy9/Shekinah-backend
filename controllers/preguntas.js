@@ -32,7 +32,7 @@ const obtenerPreguntasPaginadas = async(req, res = response) => {
 
     if (searchParams === '') {
 
-        Preguntas.find().sort('-createdAt').limit(limit).skip(skip).exec((err, preguntas) => {
+        Preguntas.find().sort('idPregunta').collation({locale: "en_US", numericOrdering: true}).limit(limit).skip(skip).exec((err, preguntas) => {
             Preguntas.count((err, count) => {
                 if (err) return false
                 res.status(200).json({
@@ -61,6 +61,42 @@ const obtenerPreguntasPaginadas = async(req, res = response) => {
         })    
     }
 
+}
+
+const obtenerPreguntasPaginadasJuego = async(req, res = response) => {
+
+    // let {page, size} = req.query
+
+    // if (!page) {
+    //     page = 3
+    // }
+
+    // if (!size) {
+    //     size = 20
+    // }
+
+    // const limit = parseInt(size)
+    // const skip = (page - 1) * size
+
+
+    // Preguntas.find().sort('-createdAt').limit(limit).skip(skip).exec((err, preguntas) => {
+    //     Preguntas.count((err, count) => {
+    //         if (err) return false
+    //         res.status(200).json({
+    //             ok: true,
+    //             preguntas
+    //         })
+    //     })
+    // })
+
+    const preguntas = await Preguntas.aggregate(
+        [{$sample: {size: 15}}]
+    )
+
+    res.status(200).json({
+        ok: true,
+        preguntas
+    })
 }
 
 const CrearPregunta = async (req, res = response) => {
@@ -152,6 +188,7 @@ const EliminarPregunta = async (req, res = response) => {
 module.exports = {
     obtenerPreguntas,
     obtenerPreguntasPaginadas,
+    obtenerPreguntasPaginadasJuego,
     CrearPregunta,
     ActualizarPregunta,
     EliminarPregunta,

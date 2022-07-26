@@ -3,7 +3,7 @@ const Record = require('../models/record')
 
 const obtenerRecords = async (req, res = response) => {
     const record = await Record.find()
-                                        .sort('-createdAt')
+                                .sort('-createdAt')
 
     res.status(200).json({
         ok: true,

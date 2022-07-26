@@ -6,7 +6,7 @@ const router = Router()
 
 router.get('/', obtenerRecords)
 
-router.use(validatJWT)
+// router.use(validatJWT)
 
 router.post('/new', CrearRecord)
 
