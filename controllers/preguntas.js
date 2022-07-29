@@ -65,30 +65,6 @@ const obtenerPreguntasPaginadas = async(req, res = response) => {
 
 const obtenerPreguntasPaginadasJuego = async(req, res = response) => {
 
-    // let {page, size} = req.query
-
-    // if (!page) {
-    //     page = 3
-    // }
-
-    // if (!size) {
-    //     size = 20
-    // }
-
-    // const limit = parseInt(size)
-    // const skip = (page - 1) * size
-
-
-    // Preguntas.find().sort('-createdAt').limit(limit).skip(skip).exec((err, preguntas) => {
-    //     Preguntas.count((err, count) => {
-    //         if (err) return false
-    //         res.status(200).json({
-    //             ok: true,
-    //             preguntas
-    //         })
-    //     })
-    // })
-
     const preguntas = await Preguntas.aggregate(
         [{$sample: {size: 15}}]
     )
@@ -97,6 +73,61 @@ const obtenerPreguntasPaginadasJuego = async(req, res = response) => {
         ok: true,
         preguntas
     })
+}
+
+const obtenerPreguntasPaginadasJuegoPersonalizadas = async(req, res = response) => {
+
+    let {count, categ, dific} = req.query
+
+    let countInt = parseInt(count)
+
+    if (categ && dific) {
+        const preguntas = await Preguntas.aggregate(
+            [
+                {
+                    $match: { categoria: categ, dificultad: dific }
+                },
+                {$sample: {size: countInt}}
+            ]
+        )
+
+        return res.status(200).json({
+            ok: true,
+            preguntas
+        })
+    }
+
+    if (categ && !dific) {
+        const preguntas = await Preguntas.aggregate(
+            [
+                {
+                    $match: { categoria: categ }
+                },
+                {$sample: {size: countInt}}
+            ]
+        )
+
+        return res.status(200).json({
+            ok: true,
+            preguntas
+        })
+    }
+
+    if (!categ && dific) {
+        const preguntas = await Preguntas.aggregate(
+            [
+                {
+                    $match: { dificultad: dific }
+                },
+                {$sample: {size: countInt}}
+            ]
+        )
+
+        return res.status(200).json({
+            ok: true,
+            preguntas
+        })
+    }
 }
 
 const CrearPregunta = async (req, res = response) => {
@@ -189,6 +220,7 @@ module.exports = {
     obtenerPreguntas,
     obtenerPreguntasPaginadas,
     obtenerPreguntasPaginadasJuego,
+    obtenerPreguntasPaginadasJuegoPersonalizadas,
     CrearPregunta,
     ActualizarPregunta,
     EliminarPregunta,
