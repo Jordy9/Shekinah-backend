@@ -10,7 +10,7 @@ router.get('/pag', obtenerPreguntasPaginadas)
 
 router.get('/juego', obtenerPreguntasPaginadasJuego)
 
-router.get('/juegoP', obtenerPreguntasPaginadasJuegoPersonalizadas)
+router.post('/juegoP', obtenerPreguntasPaginadasJuegoPersonalizadas)
 
 // router.use(validatJWT)
 

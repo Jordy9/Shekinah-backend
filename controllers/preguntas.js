@@ -77,9 +77,13 @@ const obtenerPreguntasPaginadasJuego = async(req, res = response) => {
 
 const obtenerPreguntasPaginadasJuegoPersonalizadas = async(req, res = response) => {
 
-    let {count, categ, dific} = req.query
+    let {categoria, dificultad, pregunta} = req.body
+    
+    const count = pregunta
+    const categ = categoria
+    const dific = dificultad
 
-    let countInt = parseInt(count)
+    let countInt = parseInt(count || 15)
 
     if (categ && dific) {
         const preguntas = await Preguntas.aggregate(
@@ -121,6 +125,17 @@ const obtenerPreguntasPaginadasJuegoPersonalizadas = async(req, res = response) 
                 },
                 {$sample: {size: countInt}}
             ]
+        )
+
+        return res.status(200).json({
+            ok: true,
+            preguntas
+        })
+    }
+
+    if (!categ && !dific) {
+        const preguntas = await Preguntas.aggregate(
+            [{$sample: {size: countInt}}]
         )
 
         return res.status(200).json({

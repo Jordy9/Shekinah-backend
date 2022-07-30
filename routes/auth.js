@@ -1,5 +1,5 @@
 const {Router} = require('express')
-const { obtenerUsuario, crearUsuario, loginUsuario, revalidarToken, actualizarUsuario, eliminarUsuario } = require('../controllers/auth')
+const { obtenerUsuario, crearUsuario, loginUsuario, revalidarToken, actualizarUsuario, eliminarUsuario, googleLogin, facebookLogin, actualizarContrasena } = require('../controllers/auth')
 const { validatJWT } = require('../middlewares/validar-jwt')
 const router = Router()
 
@@ -10,9 +10,15 @@ router.post('/new', crearUsuario)
 
 router.put('/:id', actualizarUsuario)
 
+router.put('/updatePassword/:id', actualizarContrasena)
+
 router.delete('/:id', eliminarUsuario)
 
 router.post('/', loginUsuario)
+
+router.post('/google', googleLogin)
+
+router.post('/facebook', facebookLogin)
 
 router.get('/renew', validatJWT, revalidarToken)
 
