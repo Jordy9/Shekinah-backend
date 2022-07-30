@@ -14,7 +14,7 @@ const UsuarioSchema = Schema({
         required: true,
         unique: true
     },
-    Juego: {
+    juego: {
         type: Object
     },
     role: {

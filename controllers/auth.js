@@ -11,7 +11,7 @@ const client = new OAuth2Client(`${googleIdAccount}`)
 
 const obtenerUsuario = async (req, res = response) => {
     const usuarios = await Usuario.find()
-                                    .sort('-createdAt')
+                                    .sort('-juego.puntos')
 
     res.status(200).json({
         ok: false,
