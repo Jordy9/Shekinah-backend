@@ -14,6 +14,9 @@ const UsuarioSchema = Schema({
         required: true,
         unique: true
     },
+    Juego: {
+        type: Object
+    },
     role: {
         type: String,
         default: 'usuario',
