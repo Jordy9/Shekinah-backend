@@ -145,6 +145,28 @@ const obtenerPreguntasPaginadasJuegoPersonalizadas = async(req, res = response) 
     }
 }
 
+const obtenerPreguntasPorId = async(req, res = response) => {
+
+    if (req.body.ids.includes('-')) {
+        const numero1 = req.body.ids.split('-')[0]
+        const numero2 = req.body.ids.split('-')[1]
+        const preguntas = await Preguntas.find({idPregunta: { $gte : numero1 , $lte : numero2}}).sort('idPregunta').collation({locale: "en_US", numericOrdering: true})
+        
+        res.status(200).json({
+            ok: true,
+            preguntas
+        })
+    } else {
+        const preguntas = await Preguntas.find({idPregunta: {$in:req.body.ids.split(',')}})
+
+        res.status(200).json({
+            ok: true,
+            preguntas
+        })
+    }
+
+}
+
 const CrearPregunta = async (req, res = response) => {
 
     try {
@@ -236,6 +258,7 @@ module.exports = {
     obtenerPreguntasPaginadas,
     obtenerPreguntasPaginadasJuego,
     obtenerPreguntasPaginadasJuegoPersonalizadas,
+    obtenerPreguntasPorId,
     CrearPregunta,
     ActualizarPregunta,
     EliminarPregunta,
