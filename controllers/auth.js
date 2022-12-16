@@ -107,22 +107,13 @@ const actualizarUsuario = async (req, res = response) => {
 
 const actualizarContrasena = async (req, res = response) => {
     const usuarioId = req.params.id
-    const {passwordActual, password} = req.body
+    const {password} = req.body
 
     try {
 
         const usuario = await Usuario.findById(usuarioId)
 
         // Confirmar la contrasena
-
-        const validPassword = bcript.compareSync(passwordActual, usuario.password)
-
-        if (!validPassword) {
-            return res.status(400).json({
-                ok: false,
-                msg: 'La contraseña es incorrecta'
-            })
-        }
 
         if (!usuario) {
             return res.status(404).json({

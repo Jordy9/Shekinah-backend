@@ -171,13 +171,23 @@ const CrearPregunta = async (req, res = response) => {
 
     try {
 
-        let pregunta = new Preguntas(req.body)
+        Preguntas.count(async (err, count) => {
 
-        await pregunta.save()
+            let idPregunta = count + 1
 
-        res.status(201).json({
-            ok: true,
-            pregunta
+            const nuevaPregunta = {
+                ...req.body,
+                idPregunta
+            }
+
+            let pregunta = new Preguntas(nuevaPregunta)
+    
+            await pregunta.save()
+    
+            res.status(201).json({
+                ok: true,
+                pregunta
+            })
         })
 
     } catch (error) {
