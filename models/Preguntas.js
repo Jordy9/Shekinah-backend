@@ -1,7 +1,6 @@
 const { Schema, model } = require('mongoose')
 
 const PreguntasSchema = Schema({
-
     pregunta: {
         type: String,
         required: true
@@ -43,6 +42,9 @@ const PreguntasSchema = Schema({
         type: String,
         required: true
     },
+    tema: {
+        type: String
+    }
 }, {
     timestamps: true
 })

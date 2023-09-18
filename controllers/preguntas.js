@@ -11,6 +11,45 @@ const obtenerPreguntas = async (req, res = response) => {
     })
 }
 
+const obtenerPreguntasPorTema = async (req, res = response) => {
+
+    let { value } = req.query
+
+    if ( !value ) {
+        return res.status(400).json({
+            ok: false,
+            preguntas: []
+        })
+    }
+
+    const preguntas = await Preguntas.find({ tema: { $eq: value } })
+                                        .sort('createdAt')
+
+    res.status(200).json({
+        preguntas
+    })
+}
+
+const JugarPreguntasPorTema = async (req, res = response) => {
+
+    let { value } = req.query
+
+    value = value.split(' ')
+
+    if ( value.length === 0 ) {
+        return res.status(400).json({
+            ok: false,
+            preguntas: []
+        })
+    }
+
+    const preguntas = await Preguntas.find({ _id: { $in: value } })
+
+    res.status(200).json({
+        preguntas
+    })
+}
+
 const obtenerPreguntasPaginadas = async(req, res = response) => {
 
     let {page, size, searchParams} = req.query
@@ -265,6 +304,8 @@ const EliminarPregunta = async (req, res = response) => {
 
 module.exports = {
     obtenerPreguntas,
+    obtenerPreguntasPorTema,
+    JugarPreguntasPorTema,
     obtenerPreguntasPaginadas,
     obtenerPreguntasPaginadasJuego,
     obtenerPreguntasPaginadasJuegoPersonalizadas,
