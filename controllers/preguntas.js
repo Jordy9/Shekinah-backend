@@ -34,7 +34,7 @@ const JugarPreguntasPorTema = async (req, res = response) => {
 
     let { value } = req.query
 
-    value = value.split(' ')
+    value = value.split(',')
 
     if ( value.length === 0 ) {
         return res.status(400).json({
@@ -45,8 +45,22 @@ const JugarPreguntasPorTema = async (req, res = response) => {
 
     const preguntas = await Preguntas.find({ _id: { $in: value } })
 
+    function compararPorId(a, b) {
+        const indexA = value.indexOf(a.id);
+        const indexB = value.indexOf(b.id);
+        
+        if (indexA === -1 || indexB === -1) {
+            // Manejar IDs que no están en el array de IDs
+            return 0;
+        }
+        
+        return indexA - indexB;
+    }
+
+    const preguntasOrdenadas = preguntas.sort(compararPorId)
+
     res.status(200).json({
-        preguntas
+        preguntas: preguntasOrdenadas
     })
 }
 
