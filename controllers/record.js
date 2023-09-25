@@ -1,5 +1,6 @@
 const {response} = require('express')
 const Record = require('../models/record')
+const { ordenarRespuestasRecord } = require('../helpers/ordenarRespuestasRecord')
 
 const obtenerRecords = async (req, res = response) => {
     const record = await Record.find()
@@ -16,6 +17,10 @@ const CrearRecord = async (req, res = response) => {
     try {
 
         let record = new Record(req.body)
+
+        const preguntas = ordenarRespuestasRecord(record.preguntas)
+
+        record.preguntas = preguntas
 
         await record.save()
 

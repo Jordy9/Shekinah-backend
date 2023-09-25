@@ -44,6 +44,10 @@ const PreguntasSchema = Schema({
     },
     tema: {
         type: String
+    },
+    tipo: {
+        type: String,
+        default: 'Pregunta'
     }
 }, {
     timestamps: true

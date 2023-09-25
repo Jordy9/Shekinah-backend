@@ -1,5 +1,6 @@
 const {response} = require('express')
 const Preguntas = require('../models/Preguntas')
+const PreguntasTema = require('../models/PreguntasTema')
 
 const obtenerPreguntas = async (req, res = response) => {
     const preguntas = await Preguntas.find()
@@ -22,8 +23,12 @@ const obtenerPreguntasPorTema = async (req, res = response) => {
         })
     }
 
-    const preguntas = await Preguntas.find({ tema: { $eq: value } })
-                                        .sort('createdAt')
+    const [ preguntasNormales, preguntasParaTema ] = await Promise.all([
+        Preguntas.find({ tema: { $eq: value } }).sort('createdAt'),
+        PreguntasTema.find({ tema: { $eq: value } }).sort('createdAt')
+    ])
+
+    const preguntas = [ ...preguntasNormales, ...preguntasParaTema ]
 
     res.status(200).json({
         preguntas
@@ -43,7 +48,12 @@ const JugarPreguntasPorTema = async (req, res = response) => {
         })
     }
 
-    const preguntas = await Preguntas.find({ _id: { $in: value } })
+    const [ preguntasNormales, preguntasParaTema ] = await Promise.all([
+        Preguntas.find({ _id: { $in: value } }),
+        PreguntasTema.find({ _id: { $in: value } })
+    ])
+
+    const preguntas = [ ...preguntasNormales, ...preguntasParaTema ]
 
     function compararPorId(a, b) {
         const indexA = value.indexOf(a.id);

@@ -27,6 +27,7 @@ app.use('/api/auth', require('./routes/auth'))
 app.use('/api/pregunta', require('./routes/preguntas'))
 app.use('/api/record', require('./routes/record'))
 app.use('/api/tema', require('./routes/tema'))
+app.use('/api/preguntasTema', require('./routes/preguntasTema'))
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, './public', 'index.html'))
