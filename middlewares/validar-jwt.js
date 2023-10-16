@@ -32,10 +32,6 @@ const validatJWT = (req, res = response, next) => {
     next()
 }
 
-
-
-
-
 module.exports = {
     validatJWT
 }

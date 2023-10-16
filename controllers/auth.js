@@ -1,5 +1,6 @@
 const {response} = require('express')
 const Usuario = require('../models/Usuario')
+const Record = require('../models/record')
 const bcript = require('bcryptjs')
 const { generarJWT } = require('../helpers/jwt')
 const {OAuth2Client} = require('google-auth-library');
@@ -11,7 +12,16 @@ const client = new OAuth2Client(`${googleIdAccount}`)
 
 const obtenerUsuario = async (req, res = response) => {
     const usuarios = await Usuario.find()
-                                    .sort('-juego.puntos')
+
+    res.status(200).json({
+        ok: false,
+        usuarios
+    })
+}
+
+const obtenerUsuariosTop10 = async (req, res = response) => {
+    const usuarios = await Usuario.find()
+                                    .select('name avatar juego.puntos').sort('-juego.puntos').limit(10)
 
     res.status(200).json({
         ok: false,
@@ -183,7 +193,6 @@ const loginUsuario = async (req, res = response) => {
 
     const {email, password} = req.body
 
-    
     try {
         let usuario = await Usuario.findOne({email})
 
@@ -207,13 +216,16 @@ const loginUsuario = async (req, res = response) => {
 
         // Generar nuestro JWT
 
-        const token = await generarJWT(usuario.id, usuario.name)
+        const [ token, record ] = await Promise.all([
+            generarJWT(usuario.id, usuario.name),
+            Record.findOne({ idJugador: usuario.id })
+        ])
         
         res.status(200).json({
             ok: true,
-            uid: usuario.id,
-            name: usuario.name,
-            token
+            token,
+            record,
+            usuario
         })
 
     } catch (error) {
@@ -231,52 +243,56 @@ const googleLogin = async (req, res = response) => {
     const {credential} = req.body
     // console.log(req.body)
 
-    const cliente = await client.verifyIdToken({
-        idToken: credential, 
-        audience: `${googleIdAccount}`,
-    })
     
-    const { given_name, family_name, email, name, email_verified } = cliente.payload
-
-    if (!email_verified) {
-       return res.status(400).json({
-        ok: false,
-        msg: 'Hubo un problema al iniciar sesión con este usuario1'
-       }) 
-    }
-
     try {
+        const cliente = await client.verifyIdToken({
+            idToken: credential, 
+            audience: `${googleIdAccount}`,
+        })
+        
+        const { given_name, family_name, email, name, email_verified } = cliente.payload
+    
+        if (!email_verified) {
+           return res.status(400).json({
+            ok: false,
+            msg: 'Hubo un problema al iniciar sesión con este usuario1'
+           }) 
+        }
+
         let usuario = await Usuario.findOne({email});
     
-    if (!usuario) {
+        if (!usuario) {
 
-        let password = `Y@${email} ${name}147852369`
+            let password = `Y@${email} ${name}147852369`
 
-        usuario = new Usuario({
-            name: given_name, 
-            lastName: family_name,
-            email: email,
-            password: password,
-        });
+            usuario = new Usuario({
+                name: given_name, 
+                lastName: family_name,
+                email: email,
+                password: password,
+            });
 
-        //Encriptar contrasena
+            //Encriptar contrasena
 
-        const salt = bcript.genSaltSync();
-        usuario.password = bcript.hashSync(password, salt);
+            const salt = bcript.genSaltSync();
+            usuario.password = bcript.hashSync(password, salt);
 
-        await usuario.save()
-    }
+            await usuario.save()
+        }
 
-    //Generar JWT
+        //Generar JWT
 
-    const token = await generarJWT(usuario.id, usuario.name)
+        const [ token, record ] = await Promise.all([
+            generarJWT(usuario.id, usuario.name),
+            Record.findOne({ idJugador: usuario.id })
+        ])
 
-    res.json({
-        ok: true,
-        uid: usuario.id,
-        name: usuario.name,
-        token
-    })
+        res.json({
+            ok: true,
+            token,
+            record,
+            usuario
+        })
     } catch (error) {
         console.log(error)
     }
@@ -286,31 +302,31 @@ const facebookLogin = async (req, res = response) => {
 
     const {userID, accessToken} = req.body
     
-
-    let urlGraphFacebook = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,email,picture&access_token=${accessToken}`
-
-    const resp = await fetch(urlGraphFacebook, {
-        method: 'GET',
-        mode: 'cors'
-        
-    })
-
-    const body = await resp.json()
-
-    const { name, email } = body
-
-    const nameSplit = name.split(" ")
-
-    const lastName = name.slice(5)
-
-    if (!email) {
-       return res.status(400).json({
-        ok: false,
-        msg: 'Hubo un problema al iniciar sesión con este usuario1'
-       }) 
-    }
-
     try {
+
+        let urlGraphFacebook = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,email,picture&access_token=${accessToken}`
+    
+        const resp = await fetch(urlGraphFacebook, {
+            method: 'GET',
+            mode: 'cors'
+            
+        })
+    
+        const body = await resp.json()
+    
+        const { name, email } = body
+    
+        const nameSplit = name.split(" ")
+    
+        const lastName = name.slice(5)
+    
+        if (!email) {
+           return res.status(400).json({
+            ok: false,
+            msg: 'Hubo un problema al iniciar sesión con este usuario1'
+           }) 
+        }
+
         let usuario = await Usuario.findOne({email});
 
     // if (!users) {
@@ -321,35 +337,39 @@ const facebookLogin = async (req, res = response) => {
     // }
 
     
-    if (!usuario) {
+        if (!usuario) {
 
-        let password = `Y@${email} ${name}147852369`
+            let password = `Y@${email} ${name}147852369`
 
-        usuario = new Usuario({
-            name: nameSplit[0], 
-            lastName: lastName,
-            email: email,
-            password: password,
-        });
+            usuario = new Usuario({
+                name: nameSplit[0], 
+                lastName: lastName,
+                email: email,
+                password: password,
+            });
 
-        //Encriptar contrasena
+            //Encriptar contrasena
 
-        const salt = bcript.genSaltSync();
-        usuario.password = bcript.hashSync(password, salt);
+            const salt = bcript.genSaltSync();
+            usuario.password = bcript.hashSync(password, salt);
 
-        await usuario.save()
-    }
+            await usuario.save()
+        }
 
-    //Generar JWT
+        //Generar JWT
 
-    const token = await generarJWT(usuario.id, usuario.name)
+        const [ token, record ] = await Promise.all([
+            generarJWT(usuario.id, usuario.name),
+            Record.findOne({ idJugador: usuario.id })
+        ])
 
-    res.json({
-        ok: true,
-        uid: usuario.id,
-        name: usuario.name,
-        token
-    })
+        res.json({
+            ok: true,
+            token,
+            record,
+            usuario
+        })
+
     } catch (error) {
         console.log(error)
     }
@@ -361,18 +381,37 @@ const revalidarToken = async (req, res = response) => {
 
     // Generar nuestro JWT
 
-    const token = await generarJWT(uid, name)
+    try {
 
-    res.status(200).json({
-        ok: true,
-        uid,
-        name,
-        token
-    })
+        const usuario = await Usuario.findById(uid)
+
+        if ( !usuario ) {
+            return res.status(401).json({
+                ok: false,
+                msg: 'Hubo un error'
+            })
+        }
+
+        const [ token, record ] = await Promise.all([
+            generarJWT(uid, name),
+            Record.findOne({ idJugador: uid })
+        ]) 
+    
+        res.status(200).json({
+            ok: true,
+            token,
+            record,
+            usuario
+        })
+
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 module.exports = {
     obtenerUsuario,
+    obtenerUsuariosTop10,
     crearUsuario,
     actualizarUsuario,
     actualizarContrasena,

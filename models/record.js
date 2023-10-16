@@ -35,6 +35,10 @@ const RecordSchema = Schema({
         required: true,
         default: 0
     },
+    seleccionadas: {
+        type: Array,
+        default: []
+    }
 }, {
     timestamps: true
 })

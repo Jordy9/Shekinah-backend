@@ -3,13 +3,25 @@ const Record = require('../models/record')
 const { ordenarRespuestasRecord } = require('../helpers/ordenarRespuestasRecord')
 
 const obtenerRecords = async (req, res = response) => {
-    const record = await Record.find()
-                                .sort('-createdAt')
 
-    res.status(200).json({
-        ok: true,
-        record
-    })
+    const { id } = req.query
+
+    try {
+        if ( !id ) {
+            return res.status(400).json({
+                ok: false
+            })
+        }
+    
+        const record = await Record.findOne({ idJugador: id })
+    
+        res.status(200).json({
+            ok: true,
+            record
+        })
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 const CrearRecord = async (req, res = response) => {
