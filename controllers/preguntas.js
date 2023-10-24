@@ -1,6 +1,8 @@
 const {response} = require('express')
 const Preguntas = require('../models/Preguntas')
 const PreguntasTema = require('../models/PreguntasTema')
+const { compararPorId } = require('../helpers/ordenarPreguntas')
+const { shuffle } = require('../helpers/ordenarRespuestasRecord')
 
 const obtenerPreguntas = async (req, res = response) => {
     const preguntas = await Preguntas.find()
@@ -55,22 +57,40 @@ const JugarPreguntasPorTema = async (req, res = response) => {
 
     const preguntas = [ ...preguntasNormales, ...preguntasParaTema ]
 
-    function compararPorId(a, b) {
-        const indexA = value.indexOf(a.id);
-        const indexB = value.indexOf(b.id);
-        
-        if (indexA === -1 || indexB === -1) {
-            // Manejar IDs que no están en el array de IDs
-            return 0;
-        }
-        
-        return indexA - indexB;
-    }
-
-    const preguntasOrdenadas = preguntas.sort(compararPorId)
+    const preguntasOrdenadas = preguntas.sort((a, b) => compararPorId(a, b, value))
 
     res.status(200).json({
         preguntas: preguntasOrdenadas
+    })
+}
+
+const JugarPreguntasAnalisis = async (req, res = response) => {
+
+    let { opcion } = req.query
+
+    const size = ( opcion === 'rapido' ) ? 5 : 10
+
+    const [ tiernas, medias, avanzadas ] = await Promise.all([
+        Preguntas.aggregate([
+            { $match: { dificultad: 'Tierno' } },
+            { $sample: { size } }
+        ]),
+        Preguntas.aggregate([
+            { $match: { dificultad: 'Medio' } },
+            { $sample: { size } }
+        ]),
+        Preguntas.aggregate([
+            { $match: { dificultad: 'Avanzado' } },
+            { $sample: { size } }
+        ])
+    ])
+
+    const preguntas = [ ...tiernas, ...medias, ...avanzadas ]
+
+    const preguntasDesordenadas = shuffle(preguntas)
+
+    res.status(200).json({
+        preguntas: preguntasDesordenadas
     })
 }
 
@@ -128,9 +148,20 @@ const obtenerPreguntasPaginadas = async(req, res = response) => {
 
 const obtenerPreguntasPaginadasJuego = async(req, res = response) => {
 
-    const preguntas = await Preguntas.aggregate(
-        [{$sample: {size: 15}}]
-    )
+    const { dificultad } = req.query
+
+    let preguntas
+
+    if ( dificultad === 'Avanzado' ) {
+        preguntas = await Preguntas.aggregate(
+            [{$sample: {size: 15}}]
+        )
+    } else {
+        preguntas = await Preguntas.aggregate([
+            { $match: { dificultad: dificultad } },
+            { $sample: { size: 15 } }
+        ])
+    }
 
     res.status(200).json({
         ok: true,
@@ -211,16 +242,40 @@ const obtenerPreguntasPaginadasJuegoPersonalizadas = async(req, res = response) 
 const obtenerPreguntasPorId = async(req, res = response) => {
 
     if (req.body.ids.includes('-')) {
+        const value = req.body.ids.split('-')
         const numero1 = req.body.ids.split('-')[0]
         const numero2 = req.body.ids.split('-')[1]
-        const preguntas = await Preguntas.find({idPregunta: { $gte : numero1 , $lte : numero2}}).sort('idPregunta').collation({locale: "en_US", numericOrdering: true})
+
+        if ( Number(numero2) > 100 ) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'El máximo de preguntas debe ser de 100'
+            })
+        }
+
+        const preguntasEncontradas = await Preguntas.find({idPregunta: { $gte : numero1 , $lte : numero2}}).sort('idPregunta').collation({locale: "en_US", numericOrdering: true})
+
+        const preguntas = preguntasEncontradas.sort((a, b) => compararPorId(a, b, value))
         
         res.status(200).json({
             ok: true,
             preguntas
         })
+
     } else {
-        const preguntas = await Preguntas.find({idPregunta: {$in:req.body.ids.split(',')}})
+
+        const value = req.body.ids.split(',')
+
+        if ( value.length > 100 ) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'El máximo de preguntas debe ser de 100'
+            })
+        }
+
+        const preguntasEncontradas = await Preguntas.find({idPregunta: {$in:req.body.ids.split(',')}})
+
+        const preguntas = preguntasEncontradas.sort((a, b) => compararPorId(a, b, value))
 
         res.status(200).json({
             ok: true,
@@ -334,6 +389,7 @@ module.exports = {
     obtenerPreguntasPaginadasJuego,
     obtenerPreguntasPaginadasJuegoPersonalizadas,
     obtenerPreguntasPorId,
+    JugarPreguntasAnalisis,
     CrearPregunta,
     ActualizarPregunta,
     EliminarPregunta,

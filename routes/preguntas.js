@@ -1,5 +1,5 @@
 const {Router} = require('express')
-const { obtenerPreguntas, CrearPregunta, ActualizarPregunta, EliminarPregunta, obtenerPreguntasPaginadas, obtenerPreguntasPaginadasJuego, obtenerPreguntasPaginadasJuegoPersonalizadas, obtenerPreguntasPorId, obtenerPreguntasPorTema, JugarPreguntasPorTema } = require('../controllers/preguntas')
+const { obtenerPreguntas, CrearPregunta, ActualizarPregunta, EliminarPregunta, obtenerPreguntasPaginadas, obtenerPreguntasPaginadasJuego, obtenerPreguntasPaginadasJuegoPersonalizadas, obtenerPreguntasPorId, obtenerPreguntasPorTema, JugarPreguntasPorTema, JugarPreguntasAnalisis } = require('../controllers/preguntas')
 const { validatJWT } = require('../middlewares/validar-jwt')
 const router = Router()
 
@@ -17,6 +17,8 @@ router.get('/juego', obtenerPreguntasPaginadasJuego)
 router.post('/juegoP', obtenerPreguntasPaginadasJuegoPersonalizadas)
 
 router.post('/juegoId', obtenerPreguntasPorId)
+
+router.get('/analisis', JugarPreguntasAnalisis)
 
 // router.use(validatJWT)
 

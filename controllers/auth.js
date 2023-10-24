@@ -5,6 +5,7 @@ const bcript = require('bcryptjs')
 const { generarJWT } = require('../helpers/jwt')
 const {OAuth2Client} = require('google-auth-library');
 const fetch = require('node-fetch')
+const { newLevel } = require('../helpers/setNextLevel')
 
 const googleIdAccount = process.env.googleIdApiAccount
 
@@ -44,7 +45,7 @@ const crearUsuario = async (req, res = response) => {
             })
         }
 
-        usuario = new Usuario(req.body)
+        usuario = new Usuario({ ...req.body, nextLevel: 0 })
     
         // Encriptar contrasena
 
@@ -76,7 +77,9 @@ const crearUsuario = async (req, res = response) => {
 
 const actualizarUsuario = async (req, res = response) => {
     const usuarioId = req.params.id
-    const {password} = req.body
+    const { usuarioToSave, currentGame } = req.body
+
+    const { password } = usuarioToSave
 
     try {
 
@@ -90,7 +93,24 @@ const actualizarUsuario = async (req, res = response) => {
         }
 
         const nuevoUsuario = {
-            ...req.body
+            ...usuarioToSave
+        }
+
+        if ( currentGame && nuevoUsuario?.level !== 'Avanzado' ) {
+
+            const { aciertos, total } = currentGame
+
+            if ( ( ( aciertos / total) * 100 ) >= 70  ) {
+                const { point, level, notify } = newLevel(nuevoUsuario?.nextLevel, nuevoUsuario?.level)
+                
+                nuevoUsuario.nextLevel = point;
+                nuevoUsuario.level = level
+    
+                if ( notify ) {
+                    nuevoUsuario.notify = notify 
+                }
+            }
+            
         }
 
         if (usuario.password !== password) {
@@ -395,7 +415,7 @@ const revalidarToken = async (req, res = response) => {
         const [ token, record ] = await Promise.all([
             generarJWT(uid, name),
             Record.findOne({ idJugador: uid })
-        ]) 
+        ])
     
         res.status(200).json({
             ok: true,

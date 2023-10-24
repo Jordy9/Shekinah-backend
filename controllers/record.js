@@ -28,6 +28,12 @@ const CrearRecord = async (req, res = response) => {
 
     try {
 
+        const hayRecord = await Record.findOne({ idJugador: req.body.idJugador })
+
+        if ( hayRecord ) {
+            await Record.findByIdAndDelete(hayRecord._id)
+        }
+
         let record = new Record(req.body)
 
         const preguntas = ordenarRespuestasRecord(record.preguntas)

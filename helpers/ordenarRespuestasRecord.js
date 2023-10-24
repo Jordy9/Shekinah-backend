@@ -23,5 +23,6 @@ const ordenarRespuestasRecord = ( preguntas ) => {
 }
 
 module.exports = {
-    ordenarRespuestasRecord
+    ordenarRespuestasRecord,
+    shuffle
 }

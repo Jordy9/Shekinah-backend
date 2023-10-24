@@ -34,6 +34,23 @@ const UsuarioSchema = Schema({
         type: String,
         required: true
     },
+    level: {
+        type: String,
+        enum: ["Tierno", "Medio", "Avanzado"]
+    },
+    isLevel: {
+        type: Boolean,
+        default: true,
+    },
+    nextLevel: {
+        type: Number,
+        required: true,
+        default: 0,
+    },
+    notifyLevel: {
+        type: Boolean,
+        default: false
+    },
     avatar: {
         type: Object,
         default: {
