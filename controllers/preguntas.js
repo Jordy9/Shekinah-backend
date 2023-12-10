@@ -246,10 +246,19 @@ const obtenerPreguntasPorId = async(req, res = response) => {
         const numero1 = req.body.ids.split('-')[0]
         const numero2 = req.body.ids.split('-')[1]
 
-        if ( Number(numero2) > 100 ) {
+        const operation = Number(numero2) - Number(numero1)
+
+        if ( operation > 100 ) {
             return res.status(400).json({
                 ok: false,
                 msg: 'El máximo de preguntas debe ser de 100'
+            })
+        }
+
+        if ( operation <= 0 ) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'El mínimo de preguntas debe ser de 1'
             })
         }
 
