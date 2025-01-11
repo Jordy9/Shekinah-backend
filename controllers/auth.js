@@ -1,9 +1,9 @@
-const {response} = require('express')
+const { response } = require('express')
 const Usuario = require('../models/Usuario')
 const Record = require('../models/record')
 const bcript = require('bcryptjs')
 const { generarJWT } = require('../helpers/jwt')
-const {OAuth2Client} = require('google-auth-library');
+const { OAuth2Client } = require('google-auth-library');
 const fetch = require('node-fetch')
 const { newLevel } = require('../helpers/setNextLevel')
 
@@ -22,7 +22,7 @@ const obtenerUsuario = async (req, res = response) => {
 
 const obtenerUsuariosTop10 = async (req, res = response) => {
     const usuarios = await Usuario.find()
-                                    .select('name avatar juego.puntos').sort('-juego.puntos').limit(10)
+        .select('name avatar juego.puntos').sort('-juego.puntos').limit(10)
 
     res.status(200).json({
         ok: false,
@@ -32,11 +32,11 @@ const obtenerUsuariosTop10 = async (req, res = response) => {
 
 const crearUsuario = async (req, res = response) => {
 
-    const {email, password} = req.body
+    const { email, password } = req.body
 
     try {
 
-        let usuario = await Usuario.findOne({email})
+        let usuario = await Usuario.findOne({ email })
 
         if (usuario) {
             return res.status(400).json({
@@ -46,7 +46,7 @@ const crearUsuario = async (req, res = response) => {
         }
 
         usuario = new Usuario({ ...req.body, nextLevel: 0 })
-    
+
         // Encriptar contrasena
 
         const salt = bcript.genSaltSync();
@@ -96,21 +96,21 @@ const actualizarUsuario = async (req, res = response) => {
             ...usuarioToSave
         }
 
-        if ( currentGame && nuevoUsuario?.level !== 'Avanzado' ) {
+        if (currentGame && nuevoUsuario?.level !== 'Avanzado') {
 
             const { aciertos, total } = currentGame
 
-            if ( ( ( aciertos / total) * 100 ) >= 70  ) {
+            if (((aciertos / total) * 100) >= 70) {
                 const { point, level, notify } = newLevel(nuevoUsuario?.nextLevel, nuevoUsuario?.level)
-                
+
                 nuevoUsuario.nextLevel = point;
                 nuevoUsuario.level = level
-    
-                if ( notify ) {
-                    nuevoUsuario.notify = notify 
+
+                if (notify) {
+                    nuevoUsuario.notify = notify
                 }
             }
-            
+
         }
 
         if (usuario.password !== password) {
@@ -118,13 +118,13 @@ const actualizarUsuario = async (req, res = response) => {
             nuevoUsuario.password = bcript.hashSync(password, salt)
         }
 
-        const usuarioActualizado = await Usuario.findByIdAndUpdate(usuarioId, nuevoUsuario, {new: true})
+        const usuarioActualizado = await Usuario.findByIdAndUpdate(usuarioId, nuevoUsuario, { new: true })
 
         res.status(200).json({
             ok: true,
             usuario: usuarioActualizado
         })
-        
+
     } catch (error) {
         console.log(error)
         res.status(500).json({
@@ -137,7 +137,7 @@ const actualizarUsuario = async (req, res = response) => {
 
 const actualizarContrasena = async (req, res = response) => {
     const usuarioId = req.params.id
-    const {password} = req.body
+    const { password } = req.body
 
     try {
 
@@ -161,13 +161,13 @@ const actualizarContrasena = async (req, res = response) => {
             nuevoUsuario.password = bcript.hashSync(password, salt)
         }
 
-        const usuarioActualizado = await Usuario.findByIdAndUpdate(usuarioId, nuevoUsuario, {new: true})
+        const usuarioActualizado = await Usuario.findByIdAndUpdate(usuarioId, nuevoUsuario, { new: true })
 
         res.status(200).json({
             ok: true,
             usuario: usuarioActualizado
         })
-        
+
     } catch (error) {
         console.log(error)
         res.status(500).json({
@@ -193,13 +193,13 @@ const eliminarUsuario = async (req, res = response) => {
         }
 
         const usuarioEliminado = await Usuario.findByIdAndDelete(usuarioId)
-        
+
         res.status(200).json({
             ok: true,
             usuario: usuarioEliminado
         })
 
-        
+
     } catch (error) {
         console.log(error)
         return res.status(500).json({
@@ -211,10 +211,10 @@ const eliminarUsuario = async (req, res = response) => {
 
 const loginUsuario = async (req, res = response) => {
 
-    const {email, password} = req.body
+    const { email, password } = req.body
 
     try {
-        let usuario = await Usuario.findOne({email})
+        let usuario = await Usuario.findOne({ email })
 
         if (!usuario) {
             return res.status(400).json({
@@ -236,11 +236,11 @@ const loginUsuario = async (req, res = response) => {
 
         // Generar nuestro JWT
 
-        const [ token, record ] = await Promise.all([
+        const [token, record] = await Promise.all([
             generarJWT(usuario.id, usuario.name),
             Record.findOne({ idJugador: usuario.id })
         ])
-        
+
         res.status(200).json({
             ok: true,
             token,
@@ -260,33 +260,33 @@ const loginUsuario = async (req, res = response) => {
 
 const googleLogin = async (req, res = response) => {
 
-    const {credential} = req.body
+    const { credential } = req.body
     // console.log(req.body)
 
-    
+
     try {
         const cliente = await client.verifyIdToken({
-            idToken: credential, 
+            idToken: credential,
             audience: `${googleIdAccount}`,
         })
-        
+
         const { given_name, family_name, email, name, email_verified } = cliente.payload
-    
+
         if (!email_verified) {
-           return res.status(400).json({
-            ok: false,
-            msg: 'Hubo un problema al iniciar sesión con este usuario1'
-           }) 
+            return res.status(400).json({
+                ok: false,
+                msg: 'Hubo un problema al iniciar sesión con este usuario1'
+            })
         }
 
-        let usuario = await Usuario.findOne({email});
-    
+        let usuario = await Usuario.findOne({ email });
+
         if (!usuario) {
 
             let password = `Y@${email} ${name}147852369`
 
             usuario = new Usuario({
-                name: given_name, 
+                name: given_name,
                 lastName: family_name,
                 email: email,
                 password: password,
@@ -302,7 +302,7 @@ const googleLogin = async (req, res = response) => {
 
         //Generar JWT
 
-        const [ token, record ] = await Promise.all([
+        const [token, record] = await Promise.all([
             generarJWT(usuario.id, usuario.name),
             Record.findOne({ idJugador: usuario.id })
         ])
@@ -320,49 +320,49 @@ const googleLogin = async (req, res = response) => {
 
 const facebookLogin = async (req, res = response) => {
 
-    const {userID, accessToken} = req.body
-    
+    const { userID, accessToken } = req.body
+
     try {
 
         let urlGraphFacebook = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,email,picture&access_token=${accessToken}`
-    
+
         const resp = await fetch(urlGraphFacebook, {
             method: 'GET',
             mode: 'cors'
-            
+
         })
-    
+
         const body = await resp.json()
-    
+
         const { name, email } = body
-    
+
         const nameSplit = name.split(" ")
-    
+
         const lastName = name.slice(5)
-    
+
         if (!email) {
-           return res.status(400).json({
-            ok: false,
-            msg: 'Hubo un problema al iniciar sesión con este usuario1'
-           }) 
+            return res.status(400).json({
+                ok: false,
+                msg: 'Hubo un problema al iniciar sesión con este usuario1'
+            })
         }
 
-        let usuario = await Usuario.findOne({email});
+        let usuario = await Usuario.findOne({ email });
 
-    // if (!users) {
-    //     return res.status(400).json({
-    //         ok: false,
-    //         msg: 'Hubo un problema al iniciar sesión con este usuario2'
-    //     })
-    // }
+        // if (!users) {
+        //     return res.status(400).json({
+        //         ok: false,
+        //         msg: 'Hubo un problema al iniciar sesión con este usuario2'
+        //     })
+        // }
 
-    
+
         if (!usuario) {
 
             let password = `Y@${email} ${name}147852369`
 
             usuario = new Usuario({
-                name: nameSplit[0], 
+                name: nameSplit[0],
                 lastName: lastName,
                 email: email,
                 password: password,
@@ -378,7 +378,7 @@ const facebookLogin = async (req, res = response) => {
 
         //Generar JWT
 
-        const [ token, record ] = await Promise.all([
+        const [token, record] = await Promise.all([
             generarJWT(usuario.id, usuario.name),
             Record.findOne({ idJugador: usuario.id })
         ])
@@ -397,7 +397,7 @@ const facebookLogin = async (req, res = response) => {
 
 const revalidarToken = async (req, res = response) => {
 
-    const {uid, name} = req
+    const { uid, name } = req
 
     // Generar nuestro JWT
 
@@ -405,18 +405,18 @@ const revalidarToken = async (req, res = response) => {
 
         const usuario = await Usuario.findById(uid)
 
-        if ( !usuario ) {
+        if (!usuario) {
             return res.status(401).json({
                 ok: false,
                 msg: 'Hubo un error'
             })
         }
 
-        const [ token, record ] = await Promise.all([
+        const [token, record] = await Promise.all([
             generarJWT(uid, name),
             Record.findOne({ idJugador: uid })
         ])
-    
+
         res.status(200).json({
             ok: true,
             token,
