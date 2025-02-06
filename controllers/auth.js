@@ -77,9 +77,7 @@ const crearUsuario = async (req, res = response) => {
 
 const actualizarUsuario = async (req, res = response) => {
     const usuarioId = req.params.id
-    const { usuarioToSave, currentGame } = req.body
-
-    const { password } = usuarioToSave
+    const { password, juego } = req.body
 
     try {
 
@@ -93,12 +91,12 @@ const actualizarUsuario = async (req, res = response) => {
         }
 
         const nuevoUsuario = {
-            ...usuarioToSave
+            ...req.body
         }
 
-        if (currentGame && nuevoUsuario?.level !== 'Avanzado') {
+        if (juego && nuevoUsuario?.level !== 'Avanzado') {
 
-            const { aciertos, total } = currentGame
+            const { aciertos, total } = juego
 
             if (((aciertos / total) * 100) >= 70) {
                 const { point, level, notify } = newLevel(nuevoUsuario?.nextLevel, nuevoUsuario?.level)
